@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Staf - My Ciapus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen pb-24">
+    <div class="max-w-md mx-auto">
+        <div class="bg-red-600 text-white px-6 pt-8 pb-16 rounded-b-[2.5rem] shadow-lg">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-red-100 text-sm">Selamat Bekerja,</p>
+                    <h2 id="namaUser" class="text-xl font-bold">-</h2>
+                    <span id="roleUser" class="inline-block bg-emerald-400 text-gray-900 text-xs font-bold px-2.5 py-1 rounded-full mt-1">-</span>
+                </div>
+                <button onclick="logout()" class="text-xs bg-red-700 px-3 py-1.5 rounded-xl">Keluar</button>
+            </div>
+        </div>
+
+        <div class="px-4 -mt-10">
+            <div class="bg-white rounded-3xl p-6 shadow-xl border border-gray-100 text-center">
+                <p class="text-gray-500 text-sm font-medium mb-1">Absensi Digital Hari Ini</p>
+                <h3 class="text-3xl font-extrabold text-gray-800 mb-6" id="jamLive">00:00:00 WIB</h3>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="prosesAbsen('Masuk')" class="bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-md text-lg">Absen Masuk</button>
+                    <button onclick="prosesAbsen('Pulang')" class="bg-gray-200 text-gray-700 font-bold py-4 rounded-2xl shadow-sm text-lg">Pulang</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // Set nama profil dari session login
+        document.getElementById('namaUser').innerText = localStorage.getItem('user_nama') || "User";
+        document.getElementById('roleUser').innerText = localStorage.getItem('user_role') || "Staf";
+
+        // Jam Real-time
+        setInterval(() => {
+            document.getElementById('jamLive').innerText = new Date().toLocaleTimeString() + " WIB";
+        }, 1000);
+
+        function prosesAbsen(tipe) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    let lat = position.coords.latitude;
+                    let lon = position.coords.longitude;
+                    
+                    // Simpan data absen ke Firebase
+                    db.collection("absensi").add({
+                        nama: localStorage.getItem('user_nama'),
+                        role: localStorage.getItem('user_role'),
+                        waktu: new Date().toLocaleString(),
+                        tipe: tipe,
+                        lokasi: `${lat}, ${lon}`,
+                        status: "Hadir"
+                    }).then(() => {
+                        alert(`Absen ${tipe} Berhasil dicatat dengan GPS!`);
+                    });
+                }, function() {
+                    alert("Gagal mengambil GPS. Pastikan izin lokasi aktif.");
+                });
+            } else {
+                alert("Browser tidak mendukung GPS.");
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
